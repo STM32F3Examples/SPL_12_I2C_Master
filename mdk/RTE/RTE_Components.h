@@ -3,7 +3,7 @@
  * Auto generated Run-Time-Environment Component Configuration File
  *      *** Do not modify ! ***
  *
- * Project: 'SPL_04_UART_STM32F3' 
+ * Project: 'SPL_09_I2C_STM32F3' 
  * Target:  'Target 1' 
  */
 
