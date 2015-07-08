@@ -7,6 +7,8 @@
 void delay_ms(int delay_time);
 void led_init(void);
 
+void i2c_init_slave(void);
+
 Serial_t USART1_Serial={USART1_getChar,USART1_sendChar};
 Serial_t USART2_Serial={USART2_getChar,USART2_sendChar};
 
@@ -48,3 +50,56 @@ void led_init(void){
 void delay_ms(int delay_time){
 	for(int i=0; i<delay_time; i++);
 }
+
+void i2c_init_slave(void){
+	
+	/* RCC Configuration */
+	/*I2C1 Peripheral clock enable */
+	RCC_APB1PeriphClockCmd(RCC_APB1ENR_I2C1EN, ENABLE);
+	/*GPIOB clock enable */
+	RCC_AHBPeriphClockCmd(RCC_AHBENR_GPIOBEN, ENABLE);
+	/* GPIO Configuration */
+	
+	/*Configure I2C1 SCL(PB8) and SDA(PB9) */
+	GPIO_InitTypeDef  myGPIO;
+	GPIO_StructInit(&myGPIO);
+	myGPIO.GPIO_Pin = GPIO_Pin_8|GPIO_Pin_9;
+	myGPIO.GPIO_Mode = GPIO_Mode_AF;
+	myGPIO.GPIO_Speed = GPIO_Speed_50MHz;
+	myGPIO.GPIO_OType = GPIO_OType_OD;
+	myGPIO.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOB, &myGPIO);
+	/* Connect PB8 to I2C1_SCL */
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource8, GPIO_AF_4);
+	/* Connect PB9 to I2C1_SDA */
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource9, GPIO_AF_4);
+	
+	#define PRESC 3
+	#define SCLL 0x13
+	#define SCLH 0xF
+	#define SDADEL 0x2
+	#define	SCLDEL 0x04 
+	
+	I2C_InitTypeDef  I2C_InitStructure;
+	I2C_StructInit(&I2C_InitStructure);
+	I2C_InitStructure.I2C_Mode = I2C_Mode_I2C;
+	I2C_InitStructure.I2C_AnalogFilter=I2C_AnalogFilter_Disable;
+	I2C_InitStructure.I2C_DigitalFilter=0x04;
+	I2C_InitStructure.I2C_Timing= (PRESC<<28)|(SCLDEL<<20)|(SDADEL<<16)|(SCLH<<8)|(SCLL<<0);
+	I2C_InitStructure.I2C_OwnAddress1 = 0x62;
+	I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
+	I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
+	I2C_Init(I2C1, &I2C_InitStructure);
+	I2C_StretchClockCmd(I2C1,DISABLE);
+	I2C_ITConfig(I2C1,I2C_IT_RXNE,ENABLE);
+	NVIC_EnableIRQ(I2C1_EV_IRQn);
+	I2C_Cmd(I2C1,ENABLE);
+}
+
+int rDataCounter=0;
+int rxi2cData[3];
+void I2C1_EV_IRQHandler(void){
+	rDataCounter++;
+	rxi2cData[rDataCounter%3]=I2C_ReceiveData(I2C1);
+}
+
