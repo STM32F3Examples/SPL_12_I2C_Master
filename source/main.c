@@ -94,14 +94,25 @@ void i2c_init_slave(void){
 	I2C_StretchClockCmd(I2C1,DISABLE);
 	I2C_Init(I2C1, &I2C_InitStructure);
 	I2C_ITConfig(I2C1,I2C_IT_RXNE,ENABLE);
+	I2C_ITConfig(I2C1,I2C_IT_ADDR,ENABLE);
 	NVIC_EnableIRQ(I2C1_EV_IRQn);
 	I2C_Cmd(I2C1,ENABLE);
 }
 
 int rDataCounter=0;
 int rxi2cData[3];
+int rx_index=0;
+int evnt_counter=0;
 void I2C1_EV_IRQHandler(void){
-	rDataCounter++;
-	rxi2cData[rDataCounter%3]=I2C_ReceiveData(I2C1);
+	if(I2C_GetITStatus(I2C1,I2C_IT_ADDR)){
+		I2C_ClearITPendingBit(I2C1,I2C_IT_ADDR);
+		rx_index=0;
+	}
+	if(I2C_GetITStatus(I2C1,I2C_IT_RXNE)){
+		rxi2cData[rx_index%3]=I2C_ReceiveData(I2C1);
+		rDataCounter++;
+		rx_index++;
+	}
+	evnt_counter++;
 }
 
