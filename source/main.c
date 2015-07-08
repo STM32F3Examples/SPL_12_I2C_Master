@@ -20,6 +20,7 @@ int main(){
 	led_init();
 	USART2_init(9600);
 	serial_puts(USART2_Serial,"\nSystem ready\n");
+	i2c_init_slave();
 	while(1){
 		serial_printf(USART2_Serial,"%d$ ",lineCounter);
 		serial_gets(USART2_Serial,mybf,80);
@@ -80,17 +81,18 @@ void i2c_init_slave(void){
 	#define SDADEL 0x2
 	#define	SCLDEL 0x04 
 	
+	I2C_Cmd(I2C1,DISABLE);
 	I2C_InitTypeDef  I2C_InitStructure;
 	I2C_StructInit(&I2C_InitStructure);
 	I2C_InitStructure.I2C_Mode = I2C_Mode_I2C;
 	I2C_InitStructure.I2C_AnalogFilter=I2C_AnalogFilter_Disable;
 	I2C_InitStructure.I2C_DigitalFilter=0x04;
 	I2C_InitStructure.I2C_Timing= (PRESC<<28)|(SCLDEL<<20)|(SDADEL<<16)|(SCLH<<8)|(SCLL<<0);
-	I2C_InitStructure.I2C_OwnAddress1 = 0x62;
+	I2C_InitStructure.I2C_OwnAddress1 = 0x62<<1;
 	I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
 	I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
-	I2C_Init(I2C1, &I2C_InitStructure);
 	I2C_StretchClockCmd(I2C1,DISABLE);
+	I2C_Init(I2C1, &I2C_InitStructure);
 	I2C_ITConfig(I2C1,I2C_IT_RXNE,ENABLE);
 	NVIC_EnableIRQ(I2C1_EV_IRQn);
 	I2C_Cmd(I2C1,ENABLE);
