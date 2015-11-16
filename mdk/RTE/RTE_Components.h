@@ -3,7 +3,7 @@
  * Auto generated Run-Time-Environment Component Configuration File
  *      *** Do not modify ! ***
  *
- * Project: 'SPL_09_I2C_STM32F3' 
+ * Project: 'SPL_12_I2C_Master' 
  * Target:  'Target 1' 
  */
 
